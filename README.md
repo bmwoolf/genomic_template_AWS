@@ -1,6 +1,10 @@
+![Banner](assets/github_banner.png)
+
 # HIPAA/NIST Compliant Genetic Analysis Infrastructure
 
 This Terraform configuration deploys a comprehensive, compliance-ready AWS infrastructure for genetic analysis workloads, meeting HIPAA, NIH-GDS, GINA, and NIST SP 800-171 requirements.
+
+All development is done on a Mac. You may need to change conmmands depending on your operating system.
 
 ## Quick Start
 
