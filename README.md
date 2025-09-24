@@ -7,8 +7,8 @@ This Terraform configuration deploys a comprehensive, compliance-ready AWS infra
 1. Install the AWS CLI
    ```bash
    brew install aws
-   configure aws
-   # enter in ACCESS_KEY_ID and SECRET_ACCESS_KEY
+   aws configure
+   # enter in ACCESS_KEY_ID and SECRET_ACCESS_KEY from AWS console
    # if you don't know how to do that, ChatGPT can help
    ```
 
