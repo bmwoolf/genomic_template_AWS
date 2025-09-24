@@ -1,0 +1,12 @@
+# Example terraform.tfvars file
+# Copy this to terraform.tfvars and fill in your actual values
+
+region         = "us-west-2"
+project_name   = "wgs-prod"
+home_ip_cidr   = "YOUR.IP.ADDRESS/32"       # your public IP with /32
+ssh_key_name   = "your-ec2-keypair-name"
+s3_bucket_name = "your-unique-bucket-name"  # must be globally unique
+instance_type  = "c7i.4xlarge"              # or "g5.2xlarge"
+disk_gb        = 500
+use_spot       = true
+alert_email    = "your-email@example.com"
