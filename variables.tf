@@ -1,11 +1,11 @@
 variable "region" {
-  type        = string
-  default     = "us-west-2"
+  type    = string
+  default = "us-west-2"
 }
 
 variable "project_name" {
-  type        = string
-  default     = "wgs-paid"
+  type    = string
+  default = "wgs-paid"
 }
 
 variable "home_ip_cidr" {
@@ -24,10 +24,10 @@ variable "s3_bucket_name" {
 }
 
 variable "instance_type" {
-  type        = string
-  default     = "c7i.4xlarge"                # pick one: c7i.4xlarge | c7i.8xlarge | g5.2xlarge
+  type    = string
+  default = "c7i.4xlarge" # pick one: c7i.4xlarge | c7i.8xlarge | g5.2xlarge
   validation {
-    condition     = contains(["c7i.4xlarge","g5.2xlarge"], var.instance_type)
+    condition     = contains(["c7i.4xlarge", "g5.2xlarge"], var.instance_type)
     error_message = "instance_type must be one of: c7i.4xlarge, g5.2xlarge."
   }
 }
@@ -54,4 +54,37 @@ variable "terminate_on_shutdown" {
 variable "alert_email" {
   type        = string
   description = "Email address for CloudWatch and budget alerts"
+}
+
+# Sensitive variables for secrets and passwords
+variable "database_password" {
+  type        = string
+  description = "Database password for the application"
+  sensitive   = true
+}
+
+variable "api_key" {
+  type        = string
+  description = "API key for external services"
+  sensitive   = true
+}
+
+variable "application_secret" {
+  type        = string
+  description = "Application secret key for authentication"
+  sensitive   = true
+}
+
+variable "jwt_secret" {
+  type        = string
+  description = "JWT secret key for token signing"
+  sensitive   = true
+  default     = ""
+}
+
+variable "encryption_key" {
+  type        = string
+  description = "Application-level encryption key"
+  sensitive   = true
+  default     = ""
 }
