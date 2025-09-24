@@ -19,7 +19,7 @@ All development is done on a Mac. You may need to change conmmands depending on 
 2. Configure variables for your environment:
    ```bash
    cp terraform.tfvars.example terraform.tfvars
-   # edit terraform.tfvars with your values
+   # IMPORTANT: edit terraform.tfvars with your values
    # use strong, unique passwords for production use
    ```
 
@@ -31,7 +31,12 @@ All development is done on a Mac. You may need to change conmmands depending on 
    terraform apply
    ```
 
-4. Access instances:
+4. If you want to just check the configuration without providing keys:
+   ```bash
+   terraform plan -var="database_password=test123" -var="api_key=test456" -var="application_secret=test789" -out=tfplan
+   ```
+
+5. Access instances:
    ```bash
    # via Session Manager (recommended, more compliant)
    aws ssm start-session --target <instance-id>
@@ -41,24 +46,22 @@ All development is done on a Mac. You may need to change conmmands depending on 
    ```
 
 
-## File Organization
-
-The infrastructure is organized into logical, maintainable files:
-
-### Core Files
+### Root Level Files
 - `main.tf`: main entry point with locals and documentation
 - `variables.tf`: input variables and validation
-- `outputs.tf`: output values and resource information
 - `providers.tf`: AWS provider configuration
+- `terraform.tfvars.example`: configuration template
+- `README.md`: this documentation
 
-### Infrastructure Components
-- `networking.tf`: VPC, subnets, routing, NAT Gateway, VPC endpoints
-- `storage.tf`: S3 buckets (FASTQ, logs, CloudTrail, Config), EFS file system
-- `security.tf`: security groups, KMS keys, encryption policies
-- `compute.tf`: EC2 instances, AMI selection, user data scripts
-- `iam.tf`: IAM roles, policies, instance profiles
-- `monitoring.tf`: CloudWatch logs, alarms, SNS topics, budgets
-- `compliance.tf`: GuardDuty, Inspector, Config, Macie, Security Hub, Backup
+### Components Directory
+- `components/networking.tf`: VPC, subnets, routing, NAT Gateway, VPC endpoints
+- `components/storage.tf`: S3 buckets (FASTQ, logs, CloudTrail, Config), EFS file system
+- `components/security.tf`: security groups, KMS keys, encryption policies
+- `components/compute.tf`: EC2 instances, AMI selection, user data scripts
+- `components/iam.tf`: IAM roles, policies, instance profiles
+- `components/monitoring.tf`: CloudWatch logs, alarms, SNS topics, budgets
+- `components/compliance.tf`: GuardDuty, Inspector, Config, Macie, Security Hub, Backup
+- `components/outputs.tf`: output values and resource information
 
 ## Compliance for HIPAA, NIH-GDS, GINA, and NIST SP 800-171
 
