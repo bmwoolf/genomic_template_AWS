@@ -16,7 +16,7 @@ This Terraform configuration deploys a comprehensive, compliance-ready AWS infra
    ```bash
    cp terraform.tfvars.example terraform.tfvars
    # edit terraform.tfvars with your values
-   # IMPORTANT: Generate strong, unique passwords for production use
+   # use strong, unique passwords for production use
    ```
 
 3. Deploy infrastructure:
