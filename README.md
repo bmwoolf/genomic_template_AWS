@@ -112,9 +112,6 @@ All development is done on a Mac. You may need to change conmmands depending on 
 
 
 ## Post-deployment checklist
-
-- [ ] update all sensitive variables in `terraform.tfvars`
-- [ ] generate strong, unique passwords for all sensitive variables
 - [ ] configure DNS validation for ACM certificate
 - [ ] test Session Manager access
 - [ ] configure SNS topic subscriptions for monitoring
@@ -124,7 +121,6 @@ All development is done on a Mac. You may need to change conmmands depending on 
 
 
 ## Compliance links
-
 - AWS compliance programs: https://aws.amazon.com/compliance/
 - HIPAA on AWS: https://aws.amazon.com/compliance/hipaa-compliance/
 - NIST SP 800-171: https://csrc.nist.gov/publications/detail/sp/800-171/rev-2/final
