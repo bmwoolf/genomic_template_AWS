@@ -6,7 +6,8 @@ This Terraform configuration deploys a comprehensive, compliance-ready AWS infra
 
 All development is done on a Mac. You may need to change conmmands depending on your operating system.
 
-## Quick Start
+
+## Quick start
 
 1. Install the AWS CLI
    ```bash
@@ -16,27 +17,33 @@ All development is done on a Mac. You may need to change conmmands depending on 
    # if you don't know how to do that, ChatGPT can help
    ```
 
-2. Configure variables for your environment:
+2. Create an EC2 key pair in the AWS console (ssh_key_name)
+![key-pair](assets/ec2_key_pair.png)
+
+3. Configure variables for your environment:
    ```bash
+   # copy + edit terraform.tfvars with your values
    cp terraform.tfvars.example terraform.tfvars
-   # IMPORTANT: edit terraform.tfvars with your values
-   # use strong, unique passwords for production use
+   
+   # create database_password and update terraform.tfvars with it
+   openssl rand -base64 32
+
+   # create application_secret and update terraform.tfvars with it
+   openssl rand -base64 32
    ```
 
-3. Deploy infrastructure:
+4. Deploy infrastructure:
    ```bash
-   terraform fmt
-   terraform init
-   terraform plan -out=plan.txt
-   terraform apply
+   terraform fmt                    # makes it pretty
+   terraform init                   # connects to your provider (AWS)
+   terraform plan -out=plan.tfplan  # creates and saves the plan
+   terraform apply                  # deploys infra
+
+   # take down infra
+   terraform destroy                # takes down infra
    ```
 
-4. If you want to just check the configuration without providing keys:
-   ```bash
-   terraform plan -var="database_password=test123" -var="api_key=test456" -var="application_secret=test789" -out=tfplan
-   ```
-
-5. Access instances:
+5. Access EC2 instances to run software on them (for your genome):
    ```bash
    # via Session Manager (recommended, more compliant)
    aws ssm start-session --target <instance-id>
@@ -46,14 +53,26 @@ All development is done on a Mac. You may need to change conmmands depending on 
    ```
 
 
-### Root Level Files
+### Cost estimation
+- Monthly cost: $200-400 (upper bound if running 24x7, maybe even more)
+- Major components: EC2 instances, NAT Gateway, CloudWatch logs, compliance services
+- Cost optimization: Spot instances, S3 lifecycle policies, log retention
+
+### Resources
+- Total resources: 110
+- VPC endpoints: 10 (complete private connectivity)
+- S3 buckets: 4 (FASTQ, logs, CloudTrail, Config)
+- KMS keys: 4 (dedicated encryption per service)
+- Config rules: 5 (continuous compliance monitoring)
+- Security services: 6 (GuardDuty, Inspector, Macie, Security Hub, WAF, Backup)
+
+
+###  Files
 - `main.tf`: main entry point with locals and documentation
 - `variables.tf`: input variables and validation
 - `providers.tf`: AWS provider configuration
 - `terraform.tfvars.example`: configuration template
 - `README.md`: this documentation
-
-### Components Directory
 - `components/networking.tf`: VPC, subnets, routing, NAT Gateway, VPC endpoints
 - `components/storage.tf`: S3 buckets (FASTQ, logs, CloudTrail, Config), EFS file system
 - `components/security.tf`: security groups, KMS keys, encryption policies
@@ -62,6 +81,7 @@ All development is done on a Mac. You may need to change conmmands depending on 
 - `components/monitoring.tf`: CloudWatch logs, alarms, SNS topics, budgets
 - `components/compliance.tf`: GuardDuty, Inspector, Config, Macie, Security Hub, Backup
 - `components/outputs.tf`: output values and resource information
+
 
 ## Compliance for HIPAA, NIH-GDS, GINA, and NIST SP 800-171
 
@@ -90,59 +110,6 @@ All development is done on a Mac. You may need to change conmmands depending on 
 - VPC flow logs: complete network traffic monitoring
 - Backup: automated daily backups with lifecycle management
 
-## Resources + Costs
-
-- Total resources: 110
-- VPC endpoints: 10 (complete private connectivity)
-- S3 buckets: 4 (FASTQ, logs, CloudTrail, Config)
-- KMS keys: 4 (dedicated encryption per service)
-- Config rules: 5 (continuous compliance monitoring)
-- Security services: 6 (GuardDuty, Inspector, Macie, Security Hub, WAF, Backup)
-
-## Cost estimation
-
-- Monthly cost: $200-400 (upper bound if running 24x7, maybe even more)
-- Major components: EC2 instances, NAT Gateway, CloudWatch logs, compliance services
-- Cost optimization: Spot instances, S3 lifecycle policies, log retention
-
-## Maintenance
-
-### Daily
-- review CloudWatch alarms and GuardDuty findings
-- check Security Hub compliance status
-- create push notifications for malicious activity
-
-### Weekly
-- monitor backup status and cost reports
-- review access logs for anomalies, eventually automate
-
-### Monthly
-- run Inspector assessments
-- update security policies and configurations
-
-## Security configuration
-
-### Required sensitive variables
-The following variables **must** be configured with strong, unique values:
-
-- `database_password`: database password for the application
-- `api_key`: API key for external services  
-- `application_secret`: application secret key for authentication
-
-### Optional sensitive variables
-These can be left empty if not needed:
-
-- `jwt_secret`: JWT secret key for token signing
-- `encryption_key`: application-level encryption key
-
-### Password generation
-Generate strong passwords using:
-```bash
-# generate a secure password
-openssl rand -base64 32
-
-# or you can use a password manager like 1Password or Bitwarden
-```
 
 ## Post-deployment checklist
 
@@ -155,7 +122,8 @@ openssl rand -base64 32
 - [ ] review and customize Config rules
 - [ ] test backup restoration procedures
 
-## Compliance Links
+
+## Compliance links
 
 - AWS compliance programs: https://aws.amazon.com/compliance/
 - HIPAA on AWS: https://aws.amazon.com/compliance/hipaa-compliance/
