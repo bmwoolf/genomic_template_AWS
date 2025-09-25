@@ -39,7 +39,7 @@ resource "aws_security_group" "ec2_sg" {
     from_port   = 8000
     to_port     = 8999
     protocol    = "tcp"
-    cidr_blocks = ["10.42.0.0/16"] # Allow from VPC CIDR
+    cidr_blocks = ["10.42.0.0/16"]  # Allow from VPC CIDR
   }
   egress {
     from_port   = 0
@@ -128,7 +128,7 @@ resource "aws_kms_key" "config" {
   description             = "CMK for AWS Config"
   enable_key_rotation     = true
   deletion_window_in_days = 30
-  tags                    = { Name = "${local.name}-config-kms" }
+  tags = { Name = "${local.name}-config-kms" }
 }
 
 resource "aws_kms_alias" "config" {
@@ -141,7 +141,7 @@ resource "aws_kms_key" "sns" {
   description             = "CMK for SNS topic encryption"
   enable_key_rotation     = true
   deletion_window_in_days = 30
-  tags                    = { Name = "${local.name}-sns-kms" }
+  tags = { Name = "${local.name}-sns-kms" }
 }
 
 resource "aws_kms_alias" "sns" {

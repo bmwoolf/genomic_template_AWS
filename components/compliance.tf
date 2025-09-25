@@ -15,7 +15,7 @@ resource "aws_cloudtrail" "main" {
   event_selector {
     read_write_type           = "All"
     include_management_events = true
-
+    
     data_resource {
       type   = "AWS::S3::Object"
       values = ["arn:aws:s3:::${aws_s3_bucket.fastq.bucket}/"]
@@ -96,9 +96,9 @@ resource "aws_config_config_rule" "cloudtrail_enabled" {
 
 # AWS GuardDuty for threat detection
 resource "aws_guardduty_detector" "main" {
-  enable                       = true
+  enable = true
   finding_publishing_frequency = "FIFTEEN_MINUTES"
-  tags                         = { Name = "${local.name}-guardduty" }
+  tags = { Name = "${local.name}-guardduty" }
 }
 
 # AWS Inspector for vulnerability assessment
@@ -109,7 +109,7 @@ resource "aws_inspector2_enabler" "main" {
 
 # AWS Inspector assessment target
 resource "aws_inspector_assessment_target" "main" {
-  name               = "${local.name}-assessment-target"
+  name = "${local.name}-assessment-target"
   resource_group_arn = aws_inspector_resource_group.main.arn
 }
 
@@ -194,13 +194,13 @@ resource "aws_ssm_document" "session_manager_preferences" {
 
 # AWS Systems Manager Parameter Store for secure configuration
 resource "aws_ssm_parameter" "database_password" {
-  name   = "/${local.name}/database/password"
-  type   = "SecureString"
-  value  = var.database_password
+  name  = "/${local.name}/database/password"
+  type  = "SecureString"
+  value = var.database_password
   key_id = aws_kms_key.cloudtrail.key_id
-
-  tags = {
-    Name       = "${local.name}-db-password"
+  
+  tags = { 
+    Name = "${local.name}-db-password"
     Compliance = "HIPAA"
   }
 }
@@ -209,7 +209,7 @@ resource "aws_ssm_parameter" "database_password" {
 resource "aws_backup_vault" "main" {
   name        = "${local.name}-backup-vault"
   kms_key_arn = aws_kms_key.cloudtrail.arn
-  tags        = { Name = "${local.name}-backup-vault" }
+  tags = { Name = "${local.name}-backup-vault" }
 }
 
 # AWS Backup plan
@@ -219,7 +219,7 @@ resource "aws_backup_plan" "main" {
   rule {
     rule_name         = "daily_backup"
     target_vault_name = aws_backup_vault.main.name
-    schedule          = "cron(0 2 * * ? *)" # Daily at 2 AM
+    schedule          = "cron(0 2 * * ? *)"  # Daily at 2 AM
 
     lifecycle {
       cold_storage_after = 30
@@ -237,8 +237,8 @@ resource "aws_backup_plan" "main" {
 # AWS Backup selection for EC2 instances
 resource "aws_backup_selection" "ec2" {
   iam_role_arn = aws_iam_role.backup_role.arn
-  name         = "${local.name}-ec2-backup-selection"
-  plan_id      = aws_backup_plan.main.id
+  name          = "${local.name}-ec2-backup-selection"
+  plan_id       = aws_backup_plan.main.id
 
   resources = [
     aws_instance.worker.arn,
@@ -305,8 +305,8 @@ resource "aws_secretsmanager_secret" "main" {
   kms_key_id              = aws_kms_key.cloudtrail.key_id
   recovery_window_in_days = 30
 
-  tags = {
-    Name       = "${local.name}-secrets"
+  tags = { 
+    Name = "${local.name}-secrets"
     Compliance = "HIPAA"
   }
 }
@@ -315,7 +315,6 @@ resource "aws_secretsmanager_secret_version" "main" {
   secret_id = aws_secretsmanager_secret.main.id
   secret_string = jsonencode({
     database_password  = var.database_password
-    api_key            = var.api_key
     application_secret = var.application_secret
     jwt_secret         = var.jwt_secret != "" ? var.jwt_secret : null
     encryption_key     = var.encryption_key != "" ? var.encryption_key : null

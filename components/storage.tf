@@ -6,7 +6,7 @@
 resource "aws_s3_bucket" "fastq" {
   bucket        = var.s3_bucket_name
   force_destroy = false
-  tags          = { Name = "${local.name}-fastq" }
+  tags = { Name = "${local.name}-fastq" }
 }
 
 resource "aws_s3_bucket_versioning" "fastq" {
@@ -60,18 +60,18 @@ resource "aws_s3_bucket_policy" "fastq" {
 
 # S3 bucket for access logs (immutable)
 resource "aws_s3_bucket" "logs" {
-  bucket              = "${var.s3_bucket_name}-access-logs"
-  object_lock_enabled = true
-  force_destroy       = false
-  tags                = { Name = "${local.name}-access-logs" }
+  bucket                = "${var.s3_bucket_name}-access-logs"
+  object_lock_enabled   = true
+  force_destroy         = false
+  tags = { Name = "${local.name}-access-logs" }
 }
 
 resource "aws_s3_bucket_object_lock_configuration" "logs" {
   bucket = aws_s3_bucket.logs.id
   rule {
     default_retention {
-      mode = "GOVERNANCE"
-      days = 90 # 90-day immutable access logs
+      mode  = "GOVERNANCE"
+      days  = 90  # 90-day immutable access logs
     }
   }
 }
@@ -111,18 +111,18 @@ resource "aws_s3_bucket_logging" "fastq" {
 
 # S3 bucket for CloudTrail
 resource "aws_s3_bucket" "cloudtrail" {
-  bucket              = "${var.s3_bucket_name}-cloudtrail"
-  object_lock_enabled = true
-  force_destroy       = false
-  tags                = { Name = "${local.name}-cloudtrail" }
+  bucket                = "${var.s3_bucket_name}-cloudtrail"
+  object_lock_enabled   = true
+  force_destroy         = false
+  tags = { Name = "${local.name}-cloudtrail" }
 }
 
 resource "aws_s3_bucket_object_lock_configuration" "trail" {
   bucket = aws_s3_bucket.cloudtrail.id
   rule {
     default_retention {
-      mode = "GOVERNANCE"
-      days = 365
+      mode  = "GOVERNANCE"
+      days  = 365
     }
   }
 }
@@ -190,7 +190,7 @@ resource "aws_s3_bucket_policy" "cloudtrail" {
 resource "aws_s3_bucket" "config" {
   bucket        = "${var.s3_bucket_name}-config"
   force_destroy = false
-  tags          = { Name = "${local.name}-config" }
+  tags = { Name = "${local.name}-config" }
 }
 
 resource "aws_s3_bucket_versioning" "config" {
@@ -223,7 +223,7 @@ resource "aws_s3_bucket_public_access_block" "config" {
 resource "aws_efs_file_system" "efs" {
   encrypted       = true
   throughput_mode = "bursting"
-  tags            = { Name = "${local.name}-efs" }
+  tags = { Name = "${local.name}-efs" }
 }
 
 resource "aws_efs_mount_target" "mt_a" {
