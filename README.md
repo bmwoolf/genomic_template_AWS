@@ -52,6 +52,11 @@ All development is done on a Mac. You may need to change conmmands depending on 
    ssh -i ~/.ssh/<key>.pem ubuntu@<bastion-ip>
    ```
 
+6. upload genome to S3 via S3 Transfer Acceleration and parallelism
+   ```bash
+   ./scripts/s3_upload.sh
+   ```
+
 
 ### Cost estimation
 - monthly cost: $200-400 (upper bound if running 24x7, maybe even more)
