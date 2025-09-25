@@ -2,25 +2,21 @@
 # copy this to your own created terraform.tfvars and fill in your actual values
 
 # basic configuration
-region         = "us-west-2"
-project_name   = "wgs-prod"
-home_ip_cidr   = "YOUR.IP.ADDRESS/32"       # Your public IP with /32
-ssh_key_name   = "your-ec2-keypair-name"
-s3_bucket_name = "your-unique-bucket-name"  # Must be globally unique
-instance_type  = "c7i.4xlarge"              # or "c7i.8xlarge" or "g5.2xlarge"
-disk_gb        = 500
-use_spot       = true
-alert_email    = "your-email@example.com"
-
-# sensitive configuration (REQUIRED)
-# generate strong, unique passwords for production use
+region              = "us-west-2"
+project_name        = "wgs-prod"
+home_ip_cidr        = "YOUR.IP.ADDRESS/32"       # your public IP with /32
+ssh_key_name        = "your-ec2-keypair-name"
+s3_bucket_name      = "your-unique-bucket-name"  # must be globally unique
+instance_type       = "c7i.4xlarge"              # or "c7i.8xlarge" or "g5.2xlarge"
+disk_gb             = 500
+use_spot            = true
+alert_email         = "your-email@example.com"
 database_password   = "your-secure-database-password-here"
-api_key             = "your-api-key-for-external-services"
 application_secret  = "your-application-secret-key-for-auth"
 
 # optional sensitive configuration
-jwt_secret       = ""  # JWT secret key for token signing
-encryption_key   = ""  # Application-level encryption key
+jwt_secret          = ""  # JWT secret key for token signing
+encryption_key      = ""  # Application-level encryption key
 
 # optional Configuration
 terminate_on_shutdown = false  # set to true if you want OS shutdown to terminate instance
