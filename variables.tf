@@ -63,11 +63,6 @@ variable "database_password" {
   sensitive   = true
 }
 
-variable "api_key" {
-  type        = string
-  description = "API key for external services"
-  sensitive   = true
-}
 
 variable "application_secret" {
   type        = string
