@@ -54,17 +54,17 @@ All development is done on a Mac. You may need to change conmmands depending on 
 
 
 ### Cost estimation
-- Monthly cost: $200-400 (upper bound if running 24x7, maybe even more)
-- Major components: EC2 instances, NAT Gateway, CloudWatch logs, compliance services
-- Cost optimization: Spot instances, S3 lifecycle policies, log retention
+- monthly cost: $200-400 (upper bound if running 24x7, maybe even more)
+- major components: EC2 instances, NAT Gateway, CloudWatch logs, compliance services
+- cost optimization: Spot instances, S3 lifecycle policies, log retention
 
 ### Resources
-- Total resources: 110
+- total resources: 110
 - VPC endpoints: 10 (complete private connectivity)
 - S3 buckets: 4 (FASTQ, logs, CloudTrail, Config)
 - KMS keys: 4 (dedicated encryption per service)
 - Config rules: 5 (continuous compliance monitoring)
-- Security services: 6 (GuardDuty, Inspector, Macie, Security Hub, WAF, Backup)
+- security services: 6 (GuardDuty, Inspector, Macie, Security Hub, WAF, Backup)
 
 
 ###  Files
