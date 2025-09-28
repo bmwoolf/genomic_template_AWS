@@ -83,7 +83,7 @@ resource "aws_instance" "bastion" {
   subnet_id              = aws_subnet.public_a.id
   vpc_security_group_ids = [aws_security_group.bastion_sg.id]
   key_name               = var.ssh_key_name
-
+  
   root_block_device {
     volume_size           = 20
     volume_type           = "gp3"
@@ -104,7 +104,8 @@ resource "aws_instance" "worker" {
   iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
 
   # if you want OS shutdown to fully terminate (and auto-delete EBS), flip the var to true
-  instance_initiated_shutdown_behavior = var.terminate_on_shutdown ? "terminate" : "stop"
+  # For spot instances, we must use "terminate" to avoid conflicts
+  instance_initiated_shutdown_behavior = var.use_spot ? "terminate" : (var.terminate_on_shutdown ? "terminate" : "stop")
 
   # be explicit that the root/scratch EBS is deleted when the instance is terminated
   root_block_device {
@@ -116,8 +117,8 @@ resource "aws_instance" "worker" {
 
   # EC2 hardening: IMDSv2 enforcement
   metadata_options {
-    http_tokens                 = "required" # enforce IMDSv2
-    http_put_response_hop_limit = 1          # prevent container access to metadata
+    http_tokens                 = "required"  # enforce IMDSv2
+    http_put_response_hop_limit = 1           # prevent container access to metadata
   }
 
   user_data = local.user_data
@@ -133,7 +134,7 @@ resource "aws_instance" "worker" {
     }
   }
 
-  tags = {
+  tags = { 
     Name = "${local.name}-ec2"
     Type = "compute"
   }
