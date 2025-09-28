@@ -27,7 +27,7 @@ variable "instance_type" {
   type    = string
   default = "c7i.4xlarge" # pick one: c7i.4xlarge | c7i.8xlarge | g5.2xlarge
   validation {
-    condition     = contains(["c7i.4xlarge", "g5.2xlarge"], var.instance_type)
+    condition     = contains(["t3.micro", "c7i.4xlarge", "g5.2xlarge"], var.instance_type)
     error_message = "instance_type must be one of: c7i.4xlarge, g5.2xlarge."
   }
 }
@@ -40,7 +40,7 @@ variable "disk_gb" {
 
 variable "use_spot" {
   type        = bool
-  default     = true
+  default     = false
   description = "Use spot instances for cost savings"
 }
 
@@ -82,4 +82,10 @@ variable "encryption_key" {
   description = "Application-level encryption key"
   sensitive   = true
   default     = ""
+}
+
+variable "enable_paid_services" {
+  type        = bool
+  default     = false
+  description = "Enable paid AWS services (GuardDuty, Inspector, Macie, SecurityHub). Requires subscriptions."
 }
