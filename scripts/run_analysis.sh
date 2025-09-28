@@ -1,9 +1,29 @@
 #!/bin/bash
-# WGS analysis pipeline
-# step 1: install tools
+# WGS analysis pipeline for AWS EC2, pulling genome from S3
 
 set -e
 
+# configuration - read from environment variables
+# these should be set when launching the EC2 instance or in user data
+S3_BUCKET="${S3_BUCKET:-}"
+REGION="${REGION:-us-west-2}"
+S3_PREFIX="${S3_PREFIX:-wgs_$(date +%Y-%m-%d)}"
+SAMPLE_NAME="${SAMPLE_NAME:-MY_SAMPLE_1}"
+
+# validate required variables
+if [[ -z "$S3_BUCKET" ]]; then
+    echo "Error: S3_BUCKET environment variable not set"
+    echo "Please set S3_BUCKET environment variable before running this script"
+    exit 1
+fi
+
+echo "~starting WGS analysis pipeline"
+echo "S3 Bucket: $S3_BUCKET"
+echo "S3 Prefix: $S3_PREFIX"
+echo "sample: $SAMPLE_NAME"
+echo "region: $REGION"
+
+# step 1: install tools
 # install conda if not present
 if ! command -v conda &> /dev/null; then
     wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
@@ -31,6 +51,19 @@ bedtools --version
 gatk --version
 python -c "import pandas, numpy, matplotlib, seaborn, pysam, Bio; print('Python packages OK')"
 
+# download FASTQ files from S3
+echo "downloading FASTQ files from S3..."
+aws s3 sync "s3://$S3_BUCKET/$S3_PREFIX/" . --exclude "*" --include "*.fastq.gz"
+gunzip *.fastq.gz || true
+
+# rename files to expected format
+if [ -f "*_R1_001.fastq" ]; then
+    mv *_R1_001.fastq my_fastq.R1.fastq
+fi
+if [ -f "*_R2_001.fastq" ]; then
+    mv *_R2_001.fastq my_fastq.R2.fastq
+fi
+
 # step 2: align reads
 # download reference genome
 wget -q ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipeline.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz
@@ -41,12 +74,12 @@ bwa index GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
 samtools faidx GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
 
 # align FASTQ to BAM
-NCPUS=16
+NCPUS=$(nproc)
 ID=HM1A2ABC1:4
-PU=HM1A2ABC1:4:MY_SAMPLE_1
+PU=HM1A2ABC1:4:$SAMPLE_NAME
 LB=20200101
 PL=ILLUMINA
-SM=MY_SAMPLE_1
+SM=$SAMPLE_NAME
 read_group_id="@RG\tID:$ID\tPU:$PU\tLB:$LB\tPL:$PL\tSM:$SM"
 
 bwa mem -t $NCPUS -R "$read_group_id" GCA_000001405.15_GRCh38_no_alt_analysis_set.fna my_fastq.R1.fastq my_fastq.R2.fastq | \
@@ -126,4 +159,13 @@ vep --input_file my_variants.vcf \
     --cache \
     --merged
 
+# upload results to S3
+echo "uploading results to S3..."
+aws s3 cp my_variants_annotated.vcf "s3://$S3_BUCKET/$S3_PREFIX/results/"
+aws s3 cp my_genome_bqsr.bam "s3://$S3_BUCKET/$S3_PREFIX/results/"
+aws s3 cp my_genome_bqsr.bam.bai "s3://$S3_BUCKET/$S3_PREFIX/results/" || true
+aws s3 cp markdup_metrics.txt "s3://$S3_BUCKET/$S3_PREFIX/results/" || true
+aws s3 cp bqsr_table.table "s3://$S3_BUCKET/$S3_PREFIX/results/" || true
+
 echo "~analysis complete: my_variants_annotated.vcf"
+echo "results uploaded to: s3://$S3_BUCKET/$S3_PREFIX/results/"
