@@ -20,15 +20,15 @@ resource "aws_iam_role" "ec2_role" {
 
 data "aws_iam_policy_document" "ec2_policy" {
   statement {
-    actions   = ["s3:GetObject", "s3:ListBucket", "s3:PutObject"]
+    actions   = ["s3:GetObject","s3:ListBucket","s3:PutObject"]
     resources = [aws_s3_bucket.fastq.arn, "${aws_s3_bucket.fastq.arn}/*"]
   }
   statement {
-    actions   = ["elasticfilesystem:ClientMount", "elasticfilesystem:ClientWrite", "ec2:DescribeAvailabilityZones"]
+    actions   = ["elasticfilesystem:ClientMount","elasticfilesystem:ClientWrite","ec2:DescribeAvailabilityZones"]
     resources = ["*"]
   }
   statement {
-    actions = [
+    actions   = [
       "logs:CreateLogGroup",
       "logs:CreateLogStream",
       "logs:PutLogEvents",
@@ -111,7 +111,7 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 
 # IAM role for VPC flow logs
 resource "aws_iam_role" "vpc_flow_logs_role" {
-  name = "${local.name}-vpc-flow-logs-role"
+  name               = "${local.name}-vpc-flow-logs-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -128,8 +128,8 @@ resource "aws_iam_role" "vpc_flow_logs_role" {
 }
 
 resource "aws_iam_role_policy" "vpc_flow_logs_policy" {
-  name = "${local.name}-vpc-flow-logs-policy"
-  role = aws_iam_role.vpc_flow_logs_role.id
+  name   = "${local.name}-vpc-flow-logs-policy"
+  role   = aws_iam_role.vpc_flow_logs_role.id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -141,7 +141,7 @@ resource "aws_iam_role_policy" "vpc_flow_logs_policy" {
           "logs:DescribeLogGroups",
           "logs:DescribeLogStreams"
         ]
-        Effect   = "Allow"
+        Effect = "Allow"
         Resource = "*"
       }
     ]
@@ -168,7 +168,7 @@ resource "aws_iam_role" "config_role" {
 
 resource "aws_iam_role_policy_attachment" "config_policy" {
   role       = aws_iam_role.config_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/ConfigRole"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWS_ConfigRole"
 }
 
 resource "aws_iam_role_policy" "config_s3_policy" {
