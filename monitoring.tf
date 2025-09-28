@@ -6,13 +6,13 @@
 resource "aws_cloudwatch_log_group" "ec2_logs" {
   name              = "/aws/ec2/${local.name}"
   retention_in_days = 30
-  tags              = { Name = "${local.name}-ec2-logs" }
+  tags = { Name = "${local.name}-ec2-logs" }
 }
 
 resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
   name              = "/aws/vpc/flowlogs/${local.name}"
   retention_in_days = 14
-  tags              = { Name = "${local.name}-vpc-flow-logs" }
+  tags = { Name = "${local.name}-vpc-flow-logs" }
 }
 
 # VPC flow logs
@@ -21,7 +21,7 @@ resource "aws_flow_log" "vpc_flow_logs" {
   log_destination = aws_cloudwatch_log_group.vpc_flow_logs.arn
   traffic_type    = "ALL"
   vpc_id          = aws_vpc.vpc.id
-  tags            = { Name = "${local.name}-vpc-flow-logs" }
+  tags = { Name = "${local.name}-vpc-flow-logs" }
 }
 
 # CloudWatch alarms
@@ -102,31 +102,31 @@ resource "aws_cloudwatch_metric_alarm" "gpu_utilization" {
 resource "aws_sns_topic" "alerts" {
   name              = "${local.name}-alerts"
   kms_master_key_id = aws_kms_key.sns.arn
-  tags              = { Name = "${local.name}-alerts" }
+  tags = { Name = "${local.name}-alerts" }
 }
 
 # Cost monitoring
 resource "aws_budgets_budget" "monthly" {
-  name              = "${local.name}-monthly-budget"
-  budget_type       = "COST"
-  limit_amount      = "500"
-  limit_unit        = "USD"
-  time_unit         = "MONTHLY"
-  time_period_start = "2024-01-01_00:00"
+  name                = "${local.name}-monthly-budget"
+  budget_type         = "COST"
+  limit_amount        = "100"
+  limit_unit          = "USD"
+  time_unit           = "MONTHLY"
+  time_period_start   = "2024-01-01_00:00"
 
   notification {
     comparison_operator        = "GREATER_THAN"
-    threshold                  = 80
-    threshold_type             = "PERCENTAGE"
-    notification_type          = "ACTUAL"
+    threshold                 = 80
+    threshold_type            = "PERCENTAGE"
+    notification_type         = "ACTUAL"
     subscriber_email_addresses = [var.alert_email]
   }
 
   notification {
     comparison_operator        = "GREATER_THAN"
-    threshold                  = 100
-    threshold_type             = "PERCENTAGE"
-    notification_type          = "FORECASTED"
+    threshold                 = 100
+    threshold_type            = "PERCENTAGE"
+    notification_type         = "FORECASTED"
     subscriber_email_addresses = [var.alert_email]
   }
 }
