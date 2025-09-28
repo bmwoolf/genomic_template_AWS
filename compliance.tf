@@ -71,7 +71,7 @@ resource "aws_config_config_rule" "s3_public_access" {
   name = "s3-bucket-public-access-prohibited"
   source {
     owner             = "AWS"
-    source_identifier = "S3_BUCKET_PUBLIC_ACCESS_PROHIBITED"
+    source_identifier = "S3_BUCKET_PUBLIC_READ_PROHIBITED"
   }
   depends_on = [aws_config_configuration_recorder.main]
 }
@@ -80,7 +80,7 @@ resource "aws_config_config_rule" "ebs_encryption" {
   name = "ebs-encryption-enabled"
   source {
     owner             = "AWS"
-    source_identifier = "EBS_ENCRYPTION_ENABLED"
+    source_identifier = "ENCRYPTED_VOLUMES"
   }
   depends_on = [aws_config_configuration_recorder.main]
 }
@@ -96,6 +96,7 @@ resource "aws_config_config_rule" "cloudtrail_enabled" {
 
 # AWS GuardDuty for threat detection
 resource "aws_guardduty_detector" "main" {
+  count = var.enable_paid_services ? 1 : 0
   enable = true
   finding_publishing_frequency = "FIFTEEN_MINUTES"
   tags = { Name = "${local.name}-guardduty" }
@@ -103,18 +104,21 @@ resource "aws_guardduty_detector" "main" {
 
 # AWS Inspector for vulnerability assessment
 resource "aws_inspector2_enabler" "main" {
+  count = var.enable_paid_services ? 1 : 0
   account_ids    = [data.aws_caller_identity.current.account_id]
   resource_types = ["EC2", "ECR", "LAMBDA"]
 }
 
 # AWS Inspector assessment target
 resource "aws_inspector_assessment_target" "main" {
+  count = var.enable_paid_services ? 1 : 0
   name = "${local.name}-assessment-target"
-  resource_group_arn = aws_inspector_resource_group.main.arn
+  resource_group_arn = aws_inspector_resource_group.main[0].arn
 }
 
 # AWS Inspector resource group
 resource "aws_inspector_resource_group" "main" {
+  count = var.enable_paid_services ? 1 : 0
   tags = {
     Name = "${local.name}-inspector-resources"
   }
@@ -122,8 +126,9 @@ resource "aws_inspector_resource_group" "main" {
 
 # AWS Inspector assessment template
 resource "aws_inspector_assessment_template" "main" {
+  count = var.enable_paid_services ? 1 : 0
   name       = "${local.name}-assessment-template"
-  target_arn = aws_inspector_assessment_target.main.arn
+  target_arn = aws_inspector_assessment_target.main[0].arn
   duration   = 3600
 
   rules_package_arns = [
@@ -136,12 +141,14 @@ resource "aws_inspector_assessment_template" "main" {
 
 # AWS Macie for data discovery and protection
 resource "aws_macie2_account" "main" {
+  count = var.enable_paid_services ? 1 : 0
   finding_publishing_frequency = "FIFTEEN_MINUTES"
   status                       = "ENABLED"
 }
 
 # AWS Macie classification job for S3 bucket
 resource "aws_macie2_classification_job" "fastq_bucket" {
+  count = var.enable_paid_services ? 1 : 0
   job_type = "ONE_TIME"
   name     = "${local.name}-fastq-classification-job"
 
@@ -157,16 +164,19 @@ resource "aws_macie2_classification_job" "fastq_bucket" {
 
 # AWS Security Hub for centralized security findings
 resource "aws_securityhub_account" "main" {
+  count = var.enable_paid_services ? 1 : 0
   enable_default_standards = true
 }
 
 # AWS Security Hub standards subscriptions
 resource "aws_securityhub_standards_subscription" "cis" {
+  count = var.enable_paid_services ? 1 : 0
   standards_arn = "arn:aws:securityhub:${var.region}::standards/cis-aws-foundations-benchmark/v/1.2.0"
   depends_on    = [aws_securityhub_account.main]
 }
 
 resource "aws_securityhub_standards_subscription" "pci" {
+  count = var.enable_paid_services ? 1 : 0
   standards_arn = "arn:aws:securityhub:${var.region}::standards/pci-dss/v/3.2.1"
   depends_on    = [aws_securityhub_account.main]
 }
@@ -300,7 +310,7 @@ resource "aws_acm_certificate" "main" {
 
 # AWS Secrets Manager for sensitive data
 resource "aws_secretsmanager_secret" "main" {
-  name                    = "${local.name}-secrets"
+  name                    = "${local.name}-secrets-v2"
   description             = "Secrets for ${local.name} application"
   kms_key_id              = aws_kms_key.cloudtrail.key_id
   recovery_window_in_days = 30
