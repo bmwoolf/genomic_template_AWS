@@ -41,12 +41,12 @@ output "config_bucket" {
 # Compliance and Security Outputs
 output "guardduty_detector_id" {
   description = "GuardDuty detector ID for threat detection"
-  value       = aws_guardduty_detector.main.id
+  value       = var.enable_paid_services ? aws_guardduty_detector.main[0].id : null
 }
 
 output "security_hub_arn" {
   description = "Security Hub ARN for centralized security findings"
-  value       = aws_securityhub_account.main.arn
+  value       = var.enable_paid_services ? aws_securityhub_account.main[0].arn : null
 }
 
 output "backup_vault_arn" {
@@ -72,10 +72,10 @@ output "kms_keys" {
 output "compliance_status" {
   description = "Compliance services status"
   value = {
-    guardduty_enabled     = aws_guardduty_detector.main.enable
-    inspector_enabled     = aws_inspector2_enabler.main.resource_types
-    macie_enabled         = aws_macie2_account.main.status
-    security_hub_enabled  = aws_securityhub_account.main.enable_default_standards
+    guardduty_enabled     = var.enable_paid_services ? aws_guardduty_detector.main[0].enable : false
+    inspector_enabled     = var.enable_paid_services ? aws_inspector2_enabler.main[0].resource_types : []
+    macie_enabled         = var.enable_paid_services ? aws_macie2_account.main[0].status : "DISABLED"
+    security_hub_enabled  = var.enable_paid_services ? aws_securityhub_account.main[0].enable_default_standards : false
     backup_enabled        = aws_backup_plan.main.name
     config_rules_enabled  = length(aws_config_config_rule.s3_encryption)
     vpc_endpoints_enabled = length(aws_vpc_endpoint.ifaces)
