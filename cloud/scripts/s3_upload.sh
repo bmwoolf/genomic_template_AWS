@@ -74,28 +74,67 @@ if ! aws sts get-caller-identity &> /dev/null; then
     exit 1
 fi
 
-# enable transfer acceleration
-aws s3api put-bucket-accelerate-configuration \
+# try to enable transfer acceleration (optional - will continue if it fails)
+echo "~attempting to enable transfer acceleration"
+if aws s3api put-bucket-accelerate-configuration \
     --bucket "$BUCKET" \
     --accelerate-configuration Status=Enabled \
-    --region "$REGION"
+    --region "$REGION" 2>/dev/null; then
+    echo "~transfer acceleration enabled successfully"
+    aws configure set default.s3.use_accelerate_endpoint true
+else
+    echo "~transfer acceleration not available, continuing with standard endpoint"
+    aws configure set default.s3.use_accelerate_endpoint false
+fi
 
-aws s3api get-bucket-accelerate-configuration --bucket "$BUCKET" --region "$REGION"
+# upload files with better timeout and retry settings
+echo "~starting upload of genomic files"
 
-# configure the AWS CLI for optimal upload performance
-aws configure set default.s3.multipart_threshold 64MB
-aws configure set default.s3.multipart_chunksize 64MB
-aws configure set default.s3.max_concurrent_requests 50
-aws configure set default.s3.use_accelerate_endpoint true
+# proceed with chunked upload (3 files at a time)
+echo "~proceeding with chunked genomic file upload (3 files at a time)"
 
-# upload files
-aws s3 sync "$SRC" "s3://$BUCKET/$DEST_PREFIX/" \
-    --exclude "*" \
-    --include "$FASTQ_PATTERN" \
-    --include "$VCF_PATTERN" \
-    --cli-read-timeout 0 \
-    --cli-connect-timeout 60 \
-    --region "$REGION"
+# create array of files to upload
+fastq_files=($(ls "$SRC"/*.fastq.gz 2>/dev/null))
+vcf_files=($(ls "$SRC"/*.vcf.gz 2>/dev/null))
+all_files=("${fastq_files[@]}" "${vcf_files[@]}")
+
+total_files=${#all_files[@]}
+echo "~found $total_files files to upload"
+
+if [[ $total_files -eq 0 ]]; then
+    echo "~no genomic files found to upload"
+    exit 0
+fi
+
+# upload in chunks of 3
+chunk_size=3
+for ((i=0; i<total_files; i+=chunk_size)); do
+    chunk_num=$((i/chunk_size + 1))
+    echo ""
+    echo "--uploading chunk $chunk_num (files $((i+1))-$((i+chunk_size > total_files ? total_files : i+chunk_size))) of $(( (total_files + chunk_size - 1) / chunk_size ))"
+    
+    # upload current chunk
+    for ((j=i; j<i+chunk_size && j<total_files; j++)); do
+        file="${all_files[j]}"
+        echo "----uploading: $(basename "$file")"
+        aws s3 cp "$file" "s3://$BUCKET/$DEST_PREFIX/" \
+            --cli-read-timeout 0 \
+            --cli-connect-timeout 300 \
+            --region "$REGION"
+        
+        if [[ $? -eq 0 ]]; then
+            echo "  ~✓ uploaded successfully"
+        else
+            echo "  ~✗ upload failed for $(basename "$file")"
+        fi
+    done
+    
+    # pause between chunks (optional)
+    if [[ $((i+chunk_size)) -lt $total_files ]]; then
+        echo "  ~pausing 2 seconds before next chunk"
+        sleep 2
+    fi
+done
 
 # check what was uploaded
 echo ""

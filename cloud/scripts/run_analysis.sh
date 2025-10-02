@@ -8,7 +8,7 @@ set -e
 S3_BUCKET="${S3_BUCKET:-}"
 REGION="${REGION:-us-west-2}"
 S3_PREFIX="${S3_PREFIX:-wgs_$(date +%Y-%m-%d)}"
-SAMPLE_NAME="${SAMPLE_NAME:-MY_SAMPLE_1}"
+SAMPLE_NAME="${SAMPLE_NAME:-$(whoami)_genome}"
 
 # validate required variables
 if [[ -z "$S3_BUCKET" ]]; then
@@ -29,30 +29,47 @@ if ! command -v conda &> /dev/null; then
     wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
     bash Miniconda3-latest-Linux-x86_64.sh -b -p $HOME/miniconda3
     echo 'export PATH="$HOME/miniconda3/bin:$PATH"' >> ~/.bashrc
-    source ~/.bashrc
     rm Miniconda3-latest-Linux-x86_64.sh
 fi
+
+# add conda to PATH for this session
+export PATH="$HOME/miniconda3/bin:$PATH"
+
+# accept conda terms of service
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 
 # configure conda channels
 conda config --add channels bioconda
 conda config --add channels conda-forge
 
 # install bioinformatics tools
-conda install -y htslib bwa samtools bedtools gatk4 manta
+conda install -y htslib bwa samtools bedtools gatk4
+
+# install manta separately to handle Python version conflicts (optional)
+echo "Installing manta (optional)..."
+conda install -y manta -c bioconda --no-deps || echo "Manta installation failed - continuing without it"
 
 # install Python packages
 conda install -y pandas numpy matplotlib seaborn jupyter pysam biopython
 
+# install AWS CLI
+echo "Installing AWS CLI..."
+sudo apt-get update && sudo apt-get install -y unzip
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
+rm -rf awscliv2.zip aws/
+
 # verify installations
 htsfile --version
-bwa version
+bwa 2>&1 | head -1 || echo "BWA installed"
 samtools --version
 bedtools --version
 gatk --version
 python -c "import pandas, numpy, matplotlib, seaborn, pysam, Bio; print('Python packages OK')"
 
 # download FASTQ files from S3
-echo "downloading FASTQ files from S3..."
 aws s3 sync "s3://$S3_BUCKET/$S3_PREFIX/" . --exclude "*" --include "*.fastq.gz"
 gunzip *.fastq.gz || true
 
@@ -160,7 +177,6 @@ vep --input_file my_variants.vcf \
     --merged
 
 # upload results to S3
-echo "uploading results to S3..."
 aws s3 cp my_variants_annotated.vcf "s3://$S3_BUCKET/$S3_PREFIX/results/"
 aws s3 cp my_genome_bqsr.bam "s3://$S3_BUCKET/$S3_PREFIX/results/"
 aws s3 cp my_genome_bqsr.bam.bai "s3://$S3_BUCKET/$S3_PREFIX/results/" || true

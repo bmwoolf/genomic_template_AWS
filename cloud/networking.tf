@@ -71,10 +71,7 @@ resource "aws_route_table" "public" {
 
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.vpc.id
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.nat.id
-  }
+  # No internet route - private subnet uses bastion proxy for outbound access
   tags = { Name = "${local.name}-private-rt" }
 }
 
@@ -99,18 +96,7 @@ resource "aws_route_table_association" "private_b" {
   route_table_id = aws_route_table.private.id
 }
 
-# NAT gateway
-resource "aws_eip" "nat" {
-  domain = "vpc"
-  tags = { Name = "${local.name}-nat-eip" }
-}
-
-resource "aws_nat_gateway" "nat" {
-  allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public_a.id
-  depends_on    = [aws_internet_gateway.igw]
-  tags = { Name = "${local.name}-nat-gateway" }
-}
+# NAT Gateway removed for cost savings - using bastion proxy instead
 
 # VPC endpoints
 # S3 gateway VPC endpoint (keep traffic on AWS backbone)
@@ -123,18 +109,12 @@ resource "aws_vpc_endpoint" "s3_gw" {
 }
 
 # VPC interface endpoints for private AWS service access
+# only keep essential endpoints for genomic analysis
 locals {
   endpoints = [
-    "com.amazonaws.${var.region}.ecr.api",
-    "com.amazonaws.${var.region}.ecr.dkr", 
-    "com.amazonaws.${var.region}.logs",
-    "com.amazonaws.${var.region}.monitoring",
-    "com.amazonaws.${var.region}.kms",
-    "com.amazonaws.${var.region}.ssm",
-    "com.amazonaws.${var.region}.ec2messages",
-    "com.amazonaws.${var.region}.ssmmessages",
-    "com.amazonaws.${var.region}.secretsmanager",
-    "com.amazonaws.${var.region}.sts"
+    "com.amazonaws.${var.region}.ecr.api",    # Container registry API
+    "com.amazonaws.${var.region}.ecr.dkr",   # Container registry Docker
+    "com.amazonaws.${var.region}.kms"        # Encryption keys
   ]
 }
 

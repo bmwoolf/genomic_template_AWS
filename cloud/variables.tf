@@ -25,22 +25,22 @@ variable "s3_bucket_name" {
 
 variable "instance_type" {
   type    = string
-  default = "c7i.4xlarge" # pick one: c7i.4xlarge | c7i.8xlarge | g5.2xlarge
+  default = "c7i.8xlarge" # optimized for large genome processing
   validation {
-    condition     = contains(["t3.micro", "c7i.4xlarge", "g5.2xlarge"], var.instance_type)
-    error_message = "instance_type must be one of: c7i.4xlarge, g5.2xlarge."
+    condition     = contains(["t3.micro", "c7i.4xlarge", "c7i.8xlarge", "g5.2xlarge", "m7i-flex.large"], var.instance_type)
+    error_message = "instance_type must be one of: t3.micro, c7i.4xlarge, c7i.8xlarge, g5.2xlarge, m7i-flex.large."
   }
 }
 
 variable "disk_gb" {
   type        = number
-  default     = 500
-  description = "Scratch space for BAM/VCF files"
+  default     = 1500
+  description = "Storage for genome data, intermediate files, and results"
 }
 
 variable "use_spot" {
   type        = bool
-  default     = false
+  default     = true
   description = "Use spot instances for cost savings"
 }
 

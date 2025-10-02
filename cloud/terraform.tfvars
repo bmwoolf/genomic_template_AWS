@@ -1,0 +1,11 @@
+region             = "us-west-2"
+project_name       = "wgs-prod"
+home_ip_cidr       = "YOUR.IP.ADDRESS/32"
+ssh_key_name       = "your-ec2-keypair-name"
+s3_bucket_name     = "your-unique-bucket-name"
+instance_type      = "c7i.8xlarge" # optimized for genome processing
+disk_gb            = 1500  # 1.5TB for genome + intermediate files
+use_spot           = true  # use spot instances for cost savings
+alert_email        = "your-email@example.com"
+database_password  = "your-secure-database-password-here"
+application_secret = "your-application-secret-key-for-auth"
