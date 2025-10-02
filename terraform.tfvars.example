@@ -20,3 +20,4 @@ encryption_key      = ""  # Application-level encryption key
 
 # optional Configuration
 terminate_on_shutdown = false  # set to true if you want OS shutdown to terminate instance
+enable_paid_services = false   # set to true to enable GuardDuty, Inspector, Macie, SecurityHub (requires subscriptions)
